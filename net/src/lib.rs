@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::{fmt, io, net};
 
 use crossbeam_channel as chan;
+use nostr::prelude::*;
 
 pub mod error;
 pub mod event;
@@ -163,6 +164,8 @@ pub trait StateMachine<Id: PeerId = net::SocketAddr>:
     fn tick(&mut self, local_time: LocalTime);
     /// A timer set with [`Io::SetTimer`] has expired.
     fn timer_expired(&mut self);
+    // /// custom_kind
+    //fn custom_kind(&mut self, keys: nostr::Keys, kind: u16, content: String);
 }
 
 /// Used by certain types of reactors to wake the event loop, for example when a
