@@ -899,13 +899,8 @@ impl<T: BlockTree, F: Filters, P: peer::Store, C: AdjustedClock<PeerId>> traits:
             let block_hash = tip.clone();
             let block_height = height.clone();
             let keys = Keys::parse(format!("{:x}", block_hash));
-            let binding = keys.expect("REASON").clone();
-            let secret_key = binding.secret_key();
-            //log::info!("public_key: {}", binding.public_key());
-            //log::info!("secret_key: {}", secret_key.to_secret_hex());
-
             let opts = Options::new().gossip(true);
-            let client = Client::new(binding.clone());
+            let client = Client::default();
             //println!("Bot public key: {:?}", keys.expect("REASON").public_key().to_bech32());
 
             client.add_relay("wss://nostr.oxtr.dev");
@@ -928,11 +923,21 @@ impl<T: BlockTree, F: Filters, P: peer::Store, C: AdjustedClock<PeerId>> traits:
 
             log::info!("{}", metadata.as_json());
 
-            client.set_metadata(&metadata);
+            //client.set_metadata(&metadata);
             //.tag(Tag::public_key(binding.public_key()));
 
-            let builder =
-                EventBuilder::metadata(&metadata).tag(Tag::public_key(binding.public_key()));
+            //let builder =
+            //  EventBuilder::metadata(&metadata).tag(Tag::public_key(binding.public_key()));
+
+            let event: nostr::Event = EventBuilder::metadata(&metadata)
+                .sign_with_keys(&keys.unwrap())
+                .unwrap();
+
+            // Convert client nessage to JSON
+            let json = ClientMessage::event(event.clone()).as_json();
+            log::info!("{json}");
+
+            client.send_event(event);
 
             msg.push(format!("headers = {}/{} ({:.1}%)", height, best, sync));
             msg.push(format!(
