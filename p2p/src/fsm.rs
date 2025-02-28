@@ -3,6 +3,11 @@
 use crossbeam_channel as chan;
 use log::*;
 
+use nostr::prelude::*;
+//use nostr::Metadata;
+//use nostr_sdk::client::Options;
+//use nostr_sdk::Client;
+
 pub mod event;
 pub mod fees;
 pub mod filter_cache;
@@ -87,12 +92,35 @@ pub trait BlockSource {
 
 impl<C: nakamoto_common::block::time::Clock> BlockSource for InventoryManager<C> {
     fn get_block(&mut self, hash: BlockHash) {
+        let block_hash = hash.clone();
+        let keys = Keys::parse(format!("{}", block_hash));
+        let binding = keys.expect("REASON");
+        let secret_key = binding.secret_key();
+
+        log::info!("Public key: {}", binding.public_key());
+        println!("Public key: {}", binding.public_key());
+        //println!("Public key bech32: {}", public_key.to_bech32());
+        log::info!("Secret key: {}", secret_key.to_secret_hex());
+        println!("Secret key: {}", secret_key.to_secret_hex());
+        //println!("Secret key bech32: {}", secret_key.to_bech32());
         self.get_block(hash)
     }
 }
 
 impl BlockSource for () {
-    fn get_block(&mut self, _hash: BlockHash) {}
+    fn get_block(&mut self, _hash: BlockHash) {
+        let block_hash = _hash.clone();
+        let keys = Keys::parse(format!("{}", block_hash));
+        let binding = keys.expect("REASON");
+        let secret_key = binding.secret_key();
+
+        log::info!("Public key: {}", binding.public_key());
+        println!("Public key: {}", binding.public_key());
+        //println!("Public key bech32: {}", public_key.to_bech32());
+        log::info!("Secret key: {}", secret_key.to_secret_hex());
+        println!("Secret key: {}", secret_key.to_secret_hex());
+        //println!("Secret key bech32: {}", secret_key.to_bech32());
+    }
 }
 
 /// Disconnect reason.
@@ -822,6 +850,20 @@ impl<T: BlockTree, F: Filters, P: peer::Store, C: AdjustedClock<PeerId>> traits:
         self.clock.set(local_time);
     }
 
+    //fn custom_kind(&mut self, keys: Keys, kind: u16, content: String) {
+    //    //let keys = Keys::generate();
+    //    let e: nostr::Event = EventBuilder::new(Kind::Custom(kind), &content)
+    //        .sign_with_keys(&keys)
+    //        .unwrap();
+
+    //    let serialized = e.as_json();
+    //    let deserialized = nostr::Event::from_json(serialized).unwrap();
+
+    //    assert_eq!(e, deserialized);
+    //    assert_eq!(Kind::Custom(123), e.kind);
+    //    assert_eq!(Kind::Custom(123), deserialized.kind);
+    //}
+
     fn timer_expired(&mut self) {
         trace!("Received wake");
 
@@ -867,6 +909,49 @@ impl<T: BlockTree, F: Filters, P: peer::Store, C: AdjustedClock<PeerId>> traits:
             let mut msg = Vec::new();
 
             msg.push(format!("tip = {}", tip));
+
+            let block_hash = tip.clone();
+            let block_height = height.clone();
+            let keys = Keys::parse(format!("{:x}", block_hash));
+            let client = nostr_sdk::Client::default();
+            //println!("Bot public key: {:?}", keys.expect("REASON").public_key().to_bech32());
+
+            let _ = client.add_relay("wss://nostr.oxtr.dev");
+            let _ = client.add_relay("wss://relay.damus.io");
+            let _ = client.add_relay("wss://nostr.mom");
+            let _ = client.add_relay("wss://nostr.wine");
+            let _ = client.add_relay("wss://relay.nostr.info");
+            let _ = client.add_relay("wss://auth.nostr1.com");
+
+            let _ = client.connect();
+
+            let metadata = nostr::types::Metadata::new()
+                .name("bitcoin")
+                .display_name(format!("{:}", block_height))
+                .about(format!("{:x}", block_hash))
+                .picture(Url::parse("https://bitcoin.org/img/home/bitcoin-img.svg").expect("REASON"))
+                .banner(Url::parse("https://bitcoin.org/img/icons/logotop.svg").expect("REASON"))
+                /*.nip05("username@example.com")*/
+                /*.lud16("pay@yukikishimoto.com")*/;
+
+            log::info!("{}", metadata.as_json());
+
+            //client.set_metadata(&metadata);
+            //.tag(Tag::public_key(binding.public_key()));
+
+            //let builder =
+            //  EventBuilder::metadata(&metadata).tag(Tag::public_key(binding.public_key()));
+
+            let event: nostr::Event = EventBuilder::metadata(&metadata)
+                .sign_with_keys(&keys.unwrap())
+                .unwrap();
+
+            // Convert client nessage to JSON
+            let json = ClientMessage::event(event.clone()).as_json();
+            log::info!("{json}");
+
+            let _ = client.send_event(event);
+
             msg.push(format!("headers = {}/{} ({:.1}%)", height, best, sync));
             msg.push(format!(
                 "cfheaders = {}/{}",
