@@ -9,6 +9,8 @@ install-all:install-node install-wallet
 #cargo install --path node
 install-node:
     @cargo install --path node
+install-nakatui:
+    @cargo install --path node --example nakatui
 #cargo install --path wallet
 install-wallet:
     @cargo install --path wallet
