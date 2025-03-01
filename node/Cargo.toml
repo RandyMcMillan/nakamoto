@@ -9,6 +9,10 @@ authors = ["Alexis Sellier <self@cloudhead.io>"]
 edition = "2021"
 license = "MIT"
 
+[[example]]
+name = "nakatui"
+path = "examples/nakatui.rs"
+
 [dependencies]
 nakamoto-client = { version = "0.4.0", path = "../client" }
 nakamoto-net-poll = { version = "0.4.0", path = "../net/poll" }
