@@ -91,6 +91,10 @@ impl<C: Clock> PingManager<C> {
 
     /// Event received.
     pub fn received_event<T>(&mut self, event: Event, _tree: &T) {
+		//
+		//
+		//
+		//
         match event {
             Event::PeerNegotiated { addr, .. } => {
                 self.peer_negotiated(addr);
@@ -129,6 +133,10 @@ impl<C: Clock> PingManager<C> {
 
     /// Called when a tick is received.
     pub fn timer_expired(&mut self) {
+		//
+		//
+		//
+		//
         let now = self.clock.local_time();
 
         for peer in self.peers.values_mut() {
@@ -166,6 +174,10 @@ impl<C: Clock> PingManager<C> {
 
     /// Called when a `ping` is received.
     fn received_ping(&mut self, addr: PeerId, nonce: u64) -> bool {
+		//
+		//
+		//
+		//
         if self.peers.contains_key(&addr) {
             self.outbox.pong(addr, nonce);
 
@@ -176,6 +188,10 @@ impl<C: Clock> PingManager<C> {
 
     /// Called when a `pong` is received.
     fn received_pong(&mut self, addr: PeerId, nonce: u64) -> bool {
+		//
+		//
+		//
+		//
         if let Some(peer) = self.peers.get_mut(&addr) {
             let now = self.clock.local_time();
 

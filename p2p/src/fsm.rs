@@ -4,9 +4,11 @@ use crossbeam_channel as chan;
 use log::*;
 
 use nostr::prelude::*;
-//use nostr::Metadata;
+use nostr::Metadata;
 //use nostr_sdk::client::Options;
 //use nostr_sdk::Client;
+use nostr_sdk::prelude::*;
+use nostr_sdk::Client;
 
 pub mod event;
 pub mod fees;
@@ -93,7 +95,7 @@ pub trait BlockSource {
 impl<C: nakamoto_common::block::time::Clock> BlockSource for InventoryManager<C> {
     fn get_block(&mut self, hash: BlockHash) {
         let block_hash = hash.clone();
-        let keys = Keys::parse(format!("{}", block_hash));
+        let keys = Keys::parse(&format!("{}", block_hash));
         let binding = keys.expect("REASON");
         let secret_key = binding.secret_key();
 
@@ -110,7 +112,7 @@ impl<C: nakamoto_common::block::time::Clock> BlockSource for InventoryManager<C>
 impl BlockSource for () {
     fn get_block(&mut self, _hash: BlockHash) {
         let block_hash = _hash.clone();
-        let keys = Keys::parse(format!("{}", block_hash));
+        let keys = Keys::parse(&format!("{}", block_hash));
         let binding = keys.expect("REASON");
         let secret_key = binding.secret_key();
 
@@ -910,11 +912,49 @@ impl<T: BlockTree, F: Filters, P: peer::Store, C: AdjustedClock<PeerId>> traits:
 
             msg.push(format!("tip = {}", tip));
 
+            use std::time::Duration;
+
+            use nostr_sdk::prelude::*;
+
+            let signer = Keys::generate();
+            let opts = Options::default().gossip(true);
+            //let client: Client = Client::builder().signer(signer).opts(opts).build();
+
+            let keys = Keys::generate();
+            let client = Client::new(keys);
+
             let block_hash = tip.clone();
             let block_height = height.clone();
-            let keys = Keys::parse(format!("{:x}", block_hash));
+            let keys = Keys::parse(&format!("{:x}", block_hash));
+            //let pubkey: String = keys.expect("REASON").clone().expect("").public_key().to_string();
+            //println!("PubKey: {}", pubkey);
+            let bech32_pubkey: String = keys.expect("").public_key().to_bech32().unwrap();
+            println!("Bech32 PubKey: {}", bech32_pubkey);
             let client = nostr_sdk::Client::default();
-            //println!("Bot public key: {:?}", keys.expect("REASON").public_key().to_bech32());
+
+            use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
+
+            use nostr_sdk::prelude::*;
+
+            // Configure client to use proxy for `.onion` relays
+            let addr = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 9050));
+            let connection: Connection = Connection::new()
+                .proxy(addr) // Use `.embedded_tor()` instead to enable the embedded tor client (require `tor` feature)
+                .target(ConnectionTarget::Onion);
+            let opts = Options::new().connection(connection);
+
+            // Create new client with custom options
+            let keys = Keys::parse(&format!("{:x}", block_hash));
+            //let client = Client::builder().signer(keys).opts(opts).build();
+            //let client = Client::new(keys);
+
+            //trace!("Bot public key: {:?}", keys.expect("REASON").clone().public_key().to_bech32());
+            //trace!("Bot public key: {:?}", keys.clone().expect("REASON").clone().public_key().to_bech32());
+            //trace!("Bot public key: {:?}", keys.clone().expect("REASON").clone().public_key().to_bech32());
+            //log::trace!("Bot public key: {:?}", keys.expect("REASON").public_key().to_bech32());
+            //log::trace!("Bot public key: {:?}", keys.clone().expect("REASON").public_key().to_bech32());
+
+            let keys = Keys::parse(&format!("{:x}", block_hash));
 
             let _ = client.add_relay("wss://nostr.oxtr.dev");
             let _ = client.add_relay("wss://relay.damus.io");
@@ -925,10 +965,11 @@ impl<T: BlockTree, F: Filters, P: peer::Store, C: AdjustedClock<PeerId>> traits:
 
             let _ = client.connect();
 
-            let metadata = nostr::types::Metadata::new()
+            use nostr::Metadata;
+            let metadata = nostr::Metadata::new()
                 .name("bitcoin")
                 .display_name(format!("{:}", block_height))
-                .about(format!("{:x}", block_hash))
+                .about(&format!("{:x}", block_hash))
                 .picture(Url::parse("https://bitcoin.org/img/home/bitcoin-img.svg").expect("REASON"))
                 .banner(Url::parse("https://bitcoin.org/img/icons/logotop.svg").expect("REASON"))
                 /*.nip05("username@example.com")*/
@@ -936,7 +977,7 @@ impl<T: BlockTree, F: Filters, P: peer::Store, C: AdjustedClock<PeerId>> traits:
 
             log::info!("{}", metadata.as_json());
 
-            //client.set_metadata(&metadata);
+            let _ = client.set_metadata(&metadata);
             //.tag(Tag::public_key(binding.public_key()));
 
             //let builder =

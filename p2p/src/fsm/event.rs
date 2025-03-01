@@ -254,6 +254,10 @@ impl fmt::Display for Event {
                 write!(fmt, "Ready to process events and commands")
             }
             Self::BlockHeadersSynced { height, hash } => {
+				//
+				//
+				//
+				//
                 write!(
                     fmt,
                     "Chain in sync with network at height {height} ({hash})"
@@ -270,6 +274,10 @@ impl fmt::Display for Event {
                     "Chain tip updated to {hash} at height {height} (reorg={reorg})"
                 )
             }
+			//
+			//
+			//
+			//
             Self::BlockConnected { header, height, .. } => {
                 write!(
                     fmt,
@@ -277,6 +285,9 @@ impl fmt::Display for Event {
                     header.block_hash(),
                     height
                 )
+
+					//
+
             }
             Self::BlockDisconnected { header, height, .. } => {
                 write!(
@@ -347,6 +358,10 @@ impl fmt::Display for Event {
             }
             Self::PeerHeightUpdated { height } => {
                 write!(fmt, "Peer height updated to {}", height)
+
+					//
+					//
+					//
             }
             Self::PeerMisbehaved { addr, reason } => {
                 write!(fmt, "Peer {addr} misbehaved: {reason}")
@@ -372,6 +387,11 @@ impl fmt::Display for Event {
             ),
             Self::MessageReceived { from, message } => {
                 write!(fmt, "Message `{}` received from {from}", message.cmd())
+					//
+					//
+					//
+					//
+					//
             }
             Self::AddressBookExhausted => {
                 write!(
@@ -427,6 +447,10 @@ pub enum TxStatus {
     },
 }
 
+//
+//
+//
+//
 impl fmt::Display for TxStatus {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

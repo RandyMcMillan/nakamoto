@@ -82,6 +82,10 @@ impl Outbox {
 
     /// Push a message to the channel.
     pub fn message(&mut self, addr: PeerId, payload: NetworkMessage) -> &Self {
+		//
+		//
+		//
+		//
         debug!(target: "p2p", "Sending {:?} to {}", payload.cmd(), addr);
 
         self.push(Io::Write(addr, payload));
@@ -90,6 +94,10 @@ impl Outbox {
 
     /// Push an event to the channel.
     pub fn event<E: std::fmt::Display + Into<Event>>(&mut self, event: E) {
+		//
+		//
+		//
+		//
         info!(target: "p2p", "{event}");
 
         self.push(Io::Event(event.into()));
@@ -140,12 +148,21 @@ impl Outbox {
 
     /// Send a `ping` message.
     pub fn ping(&mut self, addr: net::SocketAddr, nonce: u64) -> &mut Self {
+		//
+		//
+		//
+		//
         self.message(addr, NetworkMessage::Ping(nonce));
         self
     }
 
     /// Send a `pong` message.
     pub fn pong(&mut self, addr: net::SocketAddr, nonce: u64) -> &mut Self {
+		//
+		//
+		//
+		//
+		//
         self.message(addr, NetworkMessage::Pong(nonce));
         self
     }
@@ -239,6 +256,11 @@ impl Outbox {
 
     /// Sends a `tx` message to a peer.
     pub fn tx(&mut self, addr: PeerId, tx: Transaction) {
+		//
+		//
+		//
+		//
+		//
         self.message(addr, NetworkMessage::Tx(tx));
     }
 

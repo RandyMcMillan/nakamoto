@@ -62,6 +62,17 @@ pub enum Error {
     ConnectionFailed { addr: PeerId },
 }
 
+
+
+//
+//
+//
+   //
+
+
+
+
+
 /// Peer manager configuration.
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -237,6 +248,10 @@ impl<C: AdjustedClock<PeerId>> PeerManager<C> {
                 self.disconnect(addr, DisconnectReason::PeerMisbehaving(reason));
             }
             Event::MessageReceived { from, message } => match message.as_ref() {
+				//
+
+
+
                 NetworkMessage::Version(msg) => {
                     self.received_version(&from, msg, tree.height());
                 }
@@ -299,6 +314,11 @@ impl<C: AdjustedClock<PeerId>> PeerManager<C> {
         height: Height,
     ) {
         let local_time = self.clock.local_time();
+
+        //
+		//
+		//
+		//
 
         #[cfg(debug_assertions)]
         if link.is_outbound() {
@@ -573,9 +593,15 @@ impl<C: AdjustedClock<PeerId>> PeerManager<C> {
     }
 
     /// Called when a tick was received.
+	//
+
+	//
+
+	//
     pub fn timer_expired<A: AddressSource>(&mut self, addrs: &mut A) {
         let mut timed_out = Vec::new();
         let local_time = self.clock.local_time();
+		//
 
         // Time out all peers that have been idle in a "connecting" state for too long.
         for addr in self.idle_peers(local_time).collect::<Vec<_>>() {
@@ -611,6 +637,12 @@ impl<C: AdjustedClock<PeerId>> PeerManager<C> {
             self.outbox.set_timer(IDLE_TIMEOUT);
             self.last_idle = Some(local_time);
         }
+		//
+		//
+		//
+		//
+
+
         self.maintain_persistent();
     }
 
