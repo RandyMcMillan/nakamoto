@@ -28,6 +28,9 @@ pub enum Error {
     /// An error coming from the block store.
     #[error(transparent)]
     BlockStore(#[from] common::block::store::Error),
+    /// An error coming from the filter cache.
+    #[error(transparent)]
+    Filter(#[from] common::block::filter::Error),
     /// An error coming from the filter store.
     #[error(transparent)]
     FilterStore(#[from] chain::filter::store::Error),

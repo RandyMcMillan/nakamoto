@@ -330,9 +330,21 @@ impl<R: Reactor> Client<R> {
         };
         log::info!(target: "client", "Loading filter headers from store..");
 
-        let filters = FilterCache::load_with(cfheaders_store, |height| {
+        let mut filters = FilterCache::load_with(cfheaders_store, |height| {
             loading.send(Loading::FilterHeaderLoaded { height })
         })?;
+
+        let block_height = cache.height();
+        let filter_height = filters.height();
+        if filter_height > block_height {
+            log::warn!(
+                target: "client",
+                "filter header store is ahead of block store (filter_height = {}, block_height = {}); truncating filter cache to match block height",
+                filter_height,
+                block_height
+            );
+            filters.rollback(block_height)?;
+        }
 
         if config.verify {
             log::info!(target: "client", "Verifying filter headers..");
